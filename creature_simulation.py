@@ -15,6 +15,9 @@ def read_feed(label):
     global CARNIVORE_FEED
     global HERBIVORE_FEED
     global PLANT_FEED
+    print("CARNIVORES: ", len(CARNIVORE_FEED[0]))
+    print("HERBIVORES: ", len(HERBIVORE_FEED[0]))
+    print("PLANTS: ", len(PLANT_FEED[0]))
     plt.plot(PLANT_FEED[0], PLANT_FEED[1], "o")
     plt.plot(HERBIVORE_FEED[0], HERBIVORE_FEED[1], "o")
     plt.plot(CARNIVORE_FEED[0], CARNIVORE_FEED[1], "o")
@@ -29,6 +32,7 @@ class Grid:
     def __init__(self, dim):
         self.x = dim[0]
         self.y = dim[1]
+        self.grid = []
     def populate(self, pieces):
         self.pieces = pieces
     def placeCounters(self):
@@ -46,24 +50,32 @@ class Grid:
         for X in range(self.x):
             row = []
             for Y in range(self.y):
-                row.append([])
+                row.append(None)
             grid.append(row)
         self.grid = grid
     def isFilled(self, xcoor, ycoor):
-        return type(self.grid[xcoor][ycoor]) == GridObject
+        return self.grid[xcoor][ycoor] != None
     def match(self, p1, p2coor):
         p2 = self.grid[p2coor[0]][p2coor[1]]
-        if type(p1) == type(p2):
+        if type(p1.face) == type(p2.face):
             del p1
             del p2
         elif type(p1.face) == Herbivore and type(p2.face) == Carnivore:
             p1.face.die()
+            print(self.pieces.index(p1.face))
+            self.pieces.pop(pieces.index(p1.face))
         elif type(p1.face) == Carnivore and type(p2.face) == Herbivore:
             p2.face.die()
+            print(self.pieces.index(p2.face))
+            self.pieces.pop(pieces.index(p2.face))
         elif type(p1.face) == Plant and type(p2) == Herbivore:
             p1.face.die()
+            print(self.pieces.index(p1.face))
+            self.pieces.pop(pieces.index(p1.face))
         elif type(p1) == Herbivore and type(p2) == Plant:
             p2.face.die()
+            print(self.pieces.index(p2.face))
+            self.pieces.pop(pieces.index(p2.face))
     def game(self, length):
         for turn in range(length):
             self.playTurn()
@@ -141,7 +153,8 @@ class Herbivore(Creature):
         HERBIVORE_FEED[0].append(self.xcoor)
         HERBIVORE_FEED[1].append(self.ycoor)
     def die(self):
-        print("DEATH OF PREDATOR AT ({}, {})".format(self.xcoor, self.ycoor))
+        print("DEATH OF HERBIVORE AT ({}, {})".format(self.xcoor, self.ycoor))
+        del self
 
 class Counter(GridObject):
     def __init__(self, item, grid):
@@ -150,7 +163,7 @@ class Counter(GridObject):
         self.grid = grid
         self.place()
     def place(self):
-        if self.grid.isFilled(self.ycoor, self.xcoor):
+        if self.grid.isFilled(self.xcoor, self.ycoor):
             self.grid.match(self, [self.xcoor, self.ycoor])
         self.grid.grid[self.xcoor][self.ycoor] = self
 
