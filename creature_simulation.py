@@ -24,6 +24,8 @@ def read_feed(label):
     CARNIVORE_FEED = [[],[]]
     HERBIVORE_FEED = [[],[]]
     PLANT_FEED = [[],[]]
+    plt.ylim((0,100))
+    plt.xlim((0,100))
     print('gen ', label)
     plt.savefig("GENS/generation"+str(label)+".png")
     plt.close()
