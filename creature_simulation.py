@@ -39,7 +39,7 @@ class Grid:
         self.pieces = pieces
     def placeCounters(self):
         for piece in pieces:
-            Counter(piece, self)
+            piece.place(self)
     def playTurn(self):
         self.makeGrid()
         self.movePhase()
@@ -59,39 +59,44 @@ class Grid:
         return self.grid[xcoor][ycoor] != None
     def match(self, p1, p2coor):
         p2 = self.grid[p2coor[0]][p2coor[1]]
-        if type(p1.face) == type(p2.face):
-            del p1
-            del p2
-        elif type(p1.face) == Herbivore and type(p2.face) == Carnivore:
-            p1.face.die()
-            print(self.pieces.index(p1.face))
-            self.pieces.pop(pieces.index(p1.face))
-        elif type(p1.face) == Carnivore and type(p2.face) == Herbivore:
-            p2.face.die()
-            print(self.pieces.index(p2.face))
-            self.pieces.pop(pieces.index(p2.face))
-        elif type(p1.face) == Plant and type(p2) == Herbivore:
-            p1.face.die()
-            print(self.pieces.index(p1.face))
-            self.pieces.pop(pieces.index(p1.face))
+        if type(p1) == type(p2):
+            pass
+        elif type(p1) == Herbivore and type(p2) == Carnivore:
+            p1.die()
+            print(self.pieces.index(p1))
+            self.pieces.pop(pieces.index(p1))
+        elif type(p1) == Carnivore and type(p2) == Herbivore:
+            p2.die()
+            print(self.pieces.index(p2))
+            self.pieces.pop(pieces.index(p2))
+        elif type(p1) == Plant and type(p2) == Herbivore:
+            p1.die()
+            print(self.pieces.index(p1))
+            self.pieces.pop(pieces.index(p1))
         elif type(p1) == Herbivore and type(p2) == Plant:
-            p2.face.die()
-            print(self.pieces.index(p2.face))
-            self.pieces.pop(pieces.index(p2.face))
+            p2.die()
+            print(self.pieces.index(p2))
+            self.pieces.pop(pieces.index(p2))
     def game(self, length):
         for turn in range(length):
             self.playTurn()
+            print("NUM PIECES: ",len(self.pieces))
             read_feed(turn)
 
-def InitializeMatrix():
-    return [[random() for x in range(100)] for y in range(100)]
-
+def InitializeMatrix(cx, cy):
+    return [[random()*distance([cx,cy], [x,y])**-1 for x in range(100)] for y in range(100)]
+def distance(arr1, arr2):
+    return np.sqrt(sum([a-b for a,b in zip(arr1, arr2)]))
 class GridObject:
     def __init__(self, x, y):
         self.ycoor = y
         self.xcoor = x
     def makeCounter(self, grid):
         return Counter(self, grid)
+    def place(self, grid):
+        if grid.isFilled(self.xcoor, self.ycoor):
+            grid.match(self, [self.xcoor, self.ycoor])
+        grid.grid[self.xcoor][self.ycoor] = self
 class Creature(GridObject):
     def __init__(self, x, y, jump, matrix):
         GridObject.__init__(self, x, y)
@@ -131,7 +136,7 @@ class Plant(GridObject):
         PLANT_FEED[0].append(self.xcoor)
         PLANT_FEED[1].append(self.ycoor)
     def die(self):
-        print("DEATH OF PLANT AT ("+self.xcoor+", "+self.ycoor+")")
+        print("DEATH OF PLANT AT ({}, {})".format(self.xcoor, self.ycoor))
         del self
 
 class Carnivore(Creature):
@@ -157,23 +162,11 @@ class Herbivore(Creature):
     def die(self):
         print("DEATH OF HERBIVORE AT ({}, {})".format(self.xcoor, self.ycoor))
         del self
-
-class Counter(GridObject):
-    def __init__(self, item, grid):
-        GridObject.__init__(self, item.xcoor, item.ycoor)
-        self.face = item
-        self.grid = grid
-        self.place()
-    def place(self):
-        if self.grid.isFilled(self.xcoor, self.ycoor):
-            self.grid.match(self, [self.xcoor, self.ycoor])
-        self.grid.grid[self.xcoor][self.ycoor] = self
-
 if __name__ == "__main__":
     grid = Grid((100, 100))
     plants = [Plant(int(random()*100), int(random() *100)) for i in range(50*50)]
-    herbivores = [Herbivore(int(random()*100), int(random() *100), int(random()*10), InitializeMatrix()) for i in range(25*25)]
-    carnivores = [Carnivore(int(random()*100), int(random() *100), int(random()*10), InitializeMatrix()) for i in range(12*12)]
+    herbivores = [Herbivore(int(random()*100), int(random() *100), int(random()*10), InitializeMatrix(int(random()*100), int(random() *100))) for i in range(25*25)]
+    carnivores = [Carnivore(int(random()*100), int(random() *100), int(random()*10), InitializeMatrix(int(random()*100), int(random() *100))) for i in range(12*12)]
     pieces = plants + herbivores + carnivores
     grid.populate(pieces)
     grid.game(1000)
